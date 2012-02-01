@@ -1,9 +1,5 @@
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
@@ -43,16 +39,10 @@ public class GitTester {
 	}
 	
 	private static void authenticate(File prvKeyFile) {
-		String prvKey = null;
-		try {
-			prvKey = streamToString(new FileInputStream(prvKeyFile));
 			UserInfo userInfo = new BasicUserInfo();
 			GitTesterConfigSessionFactory sshFactory = new GitTesterConfigSessionFactory(
 					userInfo, prvKeyFile.getAbsolutePath());
 			JschConfigSessionFactory.setInstance(sshFactory);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private static void getHead(Repository repository) throws IOException {
@@ -79,16 +69,4 @@ public class GitTester {
 			e.printStackTrace();
 		}
 	}
-
-	public static String streamToString(InputStream inStream)
-			throws IOException {
-		BufferedReader r = new BufferedReader(new InputStreamReader(inStream));
-		StringBuilder total = new StringBuilder();
-		String line;
-		while ((line = r.readLine()) != null) {
-			total.append(line);
-		}
-		return total.toString();
-	}
-
 }

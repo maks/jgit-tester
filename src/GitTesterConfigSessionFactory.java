@@ -11,27 +11,24 @@ import com.jcraft.jsch.UserInfo;
 public class GitTesterConfigSessionFactory extends JschConfigSessionFactory {
 
 	private final UserInfo userInfo;
-	private String prvkey;
+	private String prvkeyPath;
 
-	public GitTesterConfigSessionFactory(UserInfo userInfo, String prvKey) {
+	public GitTesterConfigSessionFactory(UserInfo userInfo, String prvKeyPath) {
 		this.userInfo = userInfo;
-		this.prvkey = prvKey;
+		this.prvkeyPath = prvKeyPath;
 	}
 
 	@Override
 	protected void configure(Host host, Session session) {
-		session.setConfig("StrictHostKeyChecking", "no"); // DON'T let the
-															// hostKeyRepository
-															// ask the questions
+		// DON'T let the hostKeyRepository ask the questions
+		session.setConfig("StrictHostKeyChecking", "no");
 		session.setUserInfo(userInfo);
-
 	}
 
 	@Override
 	protected JSch createDefaultJSch(FS fs) throws JSchException {
 		final JSch jsch = new JSch();
-		jsch.addIdentity(prvkey);
+		jsch.addIdentity(prvkeyPath);
 		return jsch;
 	}
-
 }
