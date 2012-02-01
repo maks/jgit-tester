@@ -8,12 +8,12 @@ import com.jcraft.jsch.Session;
 import com.jcraft.jsch.UserInfo;
 
 
-public class GitTesterConfigSessionFactorty extends JschConfigSessionFactory {
+public class GitTesterConfigSessionFactory extends JschConfigSessionFactory {
 
 	private final UserInfo userInfo;
 	private String prvkey;
 
-	public GitTesterConfigSessionFactorty(UserInfo userInfo, String prvKey) {
+	public GitTesterConfigSessionFactory(UserInfo userInfo, String prvKey) {
 		this.userInfo = userInfo;
 		this.prvkey = prvKey;
 	}

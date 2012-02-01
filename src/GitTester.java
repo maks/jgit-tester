@@ -10,7 +10,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullCommand;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepository;
-import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.JschConfigSessionFactory;
 
 import com.jcraft.jsch.UserInfo;
@@ -20,32 +19,36 @@ public class GitTester {
 	
 	public static void main(String[] args) throws IOException {
 		File PATH = new File("/tmp/testrepo");
-		String URL = "https://maks@github.com/maks/sandbox.git";
 		
+		if (args.length < 2) {
+			System.out.println("need a param of: c, p, ac");
+			return;
+		}
+
+		String URL = args[1];
 		Repository repository = new FileRepository("/tmp/testrepo/.git");
+
 		if (args[0].equalsIgnoreCase("ac")) {
-			authenticatedCloneRepo(new File("/home/maks/.ssh/maksgithub_id_rsa"));
-		}
-		if (args[0].equalsIgnoreCase("c")) {
-			cloneRepo(PATH, URL, null);
-		}
-		if (args[0].equalsIgnoreCase("p")) {
+			authenticate(new File("/home/maks/.ssh/maksgithub_id_rsa"));
+			cloneRepo(PATH, URL);
+		} else if (args[0].equalsIgnoreCase("c")) {
+			cloneRepo(PATH, URL);
+		} else if (args[0].equalsIgnoreCase("p")) {
 			pullRepo(repository);
-		}
-		if (args[0].equalsIgnoreCase("h")) {
+		} else if (args[0].equalsIgnoreCase("h")) {
 			getHead(repository);
 		} else {
 			System.err.println("Invalid option:"+args[0]);
 		}
 	}
 	
-	private static void authenticatedCloneRepo(File privKeyFile) {
+	private static void authenticate(File prvKeyFile) {
 		String prvKey = null;
 		try {
-			prvKey = streamToString(new FileInputStream(privKeyFile));
-			UserInfo userInfo = null;
-			GitTesterConfigSessionFactorty sshFactory = new GitTesterConfigSessionFactorty(
-					userInfo, prvKey);
+			prvKey = streamToString(new FileInputStream(prvKeyFile));
+			UserInfo userInfo = new BasicUserInfo();
+			GitTesterConfigSessionFactory sshFactory = new GitTesterConfigSessionFactory(
+					userInfo, prvKeyFile.getAbsolutePath());
 			JschConfigSessionFactory.setInstance(sshFactory);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -56,17 +59,13 @@ public class GitTester {
 		System.out.println(repository.getRef("master").getObjectId().getName());
 	}
 
-	private static void cloneRepo(File path, String url,
-			CredentialsProvider credentialsProvider) {
+	private static void cloneRepo(File path, String url) {
 
 		CloneCommand clone = Git.cloneRepository();
 		clone.setBare(false);
 		clone.setCloneAllBranches(false);
 		clone.setDirectory(path).setURI(url);
 
-		if (credentialsProvider != null) {
-			clone.setCredentialsProvider(credentialsProvider);
-		}
 		clone.call();   
 	}
 	
