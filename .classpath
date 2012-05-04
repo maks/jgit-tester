@@ -8,5 +8,10 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/jsch-0.1.45.jar"/>
+	<classpathentry kind="lib" path="lib/jopt-simple-4.3.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="jar:platform:/resource/jgit-tester/lib/jopt-simple-4.3-javadoc.jar!/"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

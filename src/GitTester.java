@@ -1,6 +1,9 @@
 import java.io.File;
 import java.io.IOException;
 
+import joptsimple.OptionParser;
+import joptsimple.OptionSet;
+
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullCommand;
@@ -13,29 +16,51 @@ import com.jcraft.jsch.UserInfo;
 
 public class GitTester {
 	
+    private static SimpleCredentialsProvider creds;
+
 	public static void main(String[] args) throws IOException {
-		File PATH = new File("/tmp/testrepo");
-		
-		if (args.length < 2) {
-			System.out.println("need a param of: c, p, ac");
-			return;
-		}
+        OptionParser parser = new OptionParser("a:r:u:s:o:cph");
+        OptionSet options = parser.parse(args);
 
-		String URL = args[1];
-		Repository repository = new FileRepository("/tmp/testrepo/.git");
+        File localGitPath = null;
+        
+        if (options.has("o")) {
+            localGitPath = new File(options.valueOf("o").toString());
+        } else {
+            System.err.println("Missing local repo path with -o param");
+            System.exit(1);
+        }
 
-		if (args[0].equalsIgnoreCase("ac")) {
-			authenticate(new File("/home/maks/.ssh/maksgithub_id_rsa"));
-			cloneRepo(PATH, URL);
-		} else if (args[0].equalsIgnoreCase("c")) {
-			cloneRepo(PATH, URL);
-		} else if (args[0].equalsIgnoreCase("p")) {
-			pullRepo(repository);
-		} else if (args[0].equalsIgnoreCase("h")) {
-			getHead(repository);
-		} else {
-			System.err.println("Invalid option:"+args[0]);
-		}
+        Repository repository = new FileRepository(
+                        new File(localGitPath, ".git"));
+
+        String URL = null;
+        if (options.has("r")) {
+            URL = options.valueOf("r").toString();
+        } else {
+            System.err.println("Missing URLish");
+            System.exit(1);
+        }
+
+        if (options.has("a")) {
+            authenticate(new File(options.valueOf("a").toString()));
+            // eg "/home/user/.ssh/id_rsa"
+        }
+        if (options.has("u") || options.has("s")) {
+            creds = new SimpleCredentialsProvider(options.valueOf("u")
+                            .toString(), options.valueOf("s").toString());
+        }
+        
+        // Action
+        if (options.has("c")) {
+            cloneRepo(localGitPath, URL);
+        } else if (options.has("p")) {
+            pullRepo(repository);
+        } else if (options.has("h")) {
+            getHead(repository);
+        } else {
+            System.err.println("Invalid options");
+        }
 	}
 	
 	private static void authenticate(File prvKeyFile) {
@@ -44,6 +69,8 @@ public class GitTester {
 					userInfo, prvKeyFile.getAbsolutePath());
 			JschConfigSessionFactory.setInstance(sshFactory);
 	}
+    
+
 
 	private static void getHead(Repository repository) throws IOException {
 		System.out.println(repository.getRef("master").getObjectId().getName());
@@ -53,8 +80,12 @@ public class GitTester {
 
 		CloneCommand clone = Git.cloneRepository();
 		clone.setBare(false);
-		clone.setCloneAllBranches(false);
+        clone.setCloneAllBranches(false);
 		clone.setDirectory(path).setURI(url);
+        
+        if (creds != null) {
+            clone.setCredentialsProvider(creds);
+        }
 
 		clone.call();   
 	}
@@ -69,4 +100,5 @@ public class GitTester {
 			e.printStackTrace();
 		}
 	}
+
 }
